@@ -221,9 +221,9 @@ body {
     font-weight: 500;
 }
 
-/* 모바일 전용 테마 퀵 필터 (전체 / 마사지 / 출장마사지) */
+/* 테마 퀵 필터 (전체 / 마사지 / 출장마사지) */
 .mobile-theme-shortcuts {
-    display: none;
+    display: flex;
     margin-bottom: 1rem;
     gap: 0.5rem;
 }
@@ -1103,9 +1103,5 @@ body {
     .detail-meta {
         flex-direction: column;
         gap: 0.5rem;
-    }
-
-    .mobile-theme-shortcuts {
-        display: flex;
     }
 }
