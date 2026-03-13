@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{SHOP_NAME}} - 인천출장마사지</title>
+    <meta name="description" content="{{SHOP_DESCRIPTION}}">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">인천출장마사지</h1>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="detail-container">
+            <a href="index.html" class="btn-back">← 목록으로 돌아가기</a>
+
+            <div class="detail-header">
+                <h1 class="detail-title">{{SHOP_NAME}}</h1>
+                <div class="detail-meta">
+                    <div class="detail-rating">
+                        ⭐ {{SHOP_RATING}} ({{SHOP_REVIEW_COUNT}})
+                    </div>
+                    <div>📍 {{SHOP_LOCATION}}</div>
+                    <div>📞 {{SHOP_PHONE}}</div>
+                    <div>💰 {{SHOP_PRICE}}</div>
+                </div>
+            </div>
+
+            <img src="{{SHOP_IMAGE}}" alt="{{SHOP_NAME}}" class="detail-image" onerror="this.src='images/default.jpg'">
+
+            <div class="detail-section">
+                <h2 class="detail-section-title">업체 소개</h2>
+                <p class="detail-description">{{SHOP_DESCRIPTION}}</p>
+                <div class="detail-info-item">
+                    <span class="detail-info-label">운영시간:</span>
+                    <span class="detail-info-value">{{SHOP_OPERATING_HOURS}}</span>
+                </div>
+                <div class="detail-info-item">
+                    <span class="detail-info-label">상세주소:</span>
+                    <span class="detail-info-value">{{SHOP_DETAIL_ADDRESS}}</span>
+                </div>
+            </div>
+
+            {{COURSES_SECTION}}
+
+            <div class="detail-section">
+                <h2 class="detail-section-title">관리사 정보</h2>
+                <p class="detail-description">{{STAFF_INFO}}</p>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="detail-section-title">특징</h2>
+                <ul class="features-list">
+                    {{FEATURES_LIST}}
+                </ul>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="detail-section-title">리뷰</h2>
+                <ul class="reviews-list">
+                    {{REVIEWS_LIST}}
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 인천출장마사지. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="shop-card-data.js"></script>
+    <script src="shops.json"></script>
+    <script src="detail.js"></script>
+</body>
+</html>

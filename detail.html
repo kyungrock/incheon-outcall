@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인천출장마사지 - 업체 상세</title>
+    <meta name="description" content="인천출장마사지 업체 상세 페이지">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">인천출장마사지</h1>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="detail-container">
+            <a href="index.html" class="btn-back">← 목록으로 돌아가기</a>
+
+            <div class="detail-header">
+                <h1 class="detail-title">업체명</h1>
+                <div class="detail-meta">
+                    <div class="detail-rating">
+                        ⭐ 0.0 (0)
+                    </div>
+                    <div class="detail-meta-location">📍 지역 정보</div>
+                    <a href="#" class="detail-meta-phone">📞 전화번호</a>
+                    <div class="detail-meta-price">💰 가격 정보</div>
+                </div>
+            </div>
+
+            <img src="images/default.jpg" alt="업체 이미지" class="detail-image" onerror="this.src='images/default.jpg'">
+
+            <div class="detail-section">
+                <h2 class="detail-section-title">업체 소개</h2>
+                <p class="detail-description">업체 소개 내용이 여기에 표시됩니다.</p>
+                <div class="detail-info-item">
+                    <span class="detail-info-label">운영시간:</span>
+                    <span class="detail-info-value">문의</span>
+                </div>
+                <div class="detail-info-item">
+                    <span class="detail-info-label">상세주소:</span>
+                    <span class="detail-info-value">상세주소 정보</span>
+                </div>
+            </div>
+
+            <div class="detail-section courses-section">
+                <h2 class="detail-section-title">코스 및 가격</h2>
+                <ul class="courses-list">
+                    <!-- detail.js에서 동적으로 채움 -->
+                </ul>
+            </div>
+
+            <div class="detail-section staff-section">
+                <h2 class="detail-section-title">관리사 정보</h2>
+                <p class="detail-description">관리사 정보가 여기에 표시됩니다.</p>
+            </div>
+
+            <div class="detail-section features-section">
+                <h2 class="detail-section-title">특징</h2>
+                <ul class="features-list">
+                    <!-- detail.js에서 동적으로 채움 -->
+                </ul>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="detail-section-title">리뷰</h2>
+                <ul class="reviews-list">
+                    <!-- detail.js에서 동적으로 채움 -->
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- 하단 고정 액션 바 -->
+    <div class="detail-bottom-bar">
+        <a href="#" class="bottom-bar-phone">📞 전화걸기</a>
+        <button type="button" class="bottom-bar-map-toggle">지도보기</button>
+        <div class="bottom-bar-map-panel">
+            <button type="button" class="map-btn map-btn-tmap">티맵</button>
+            <button type="button" class="map-btn map-btn-kakao">카카오맵</button>
+            <button type="button" class="map-btn map-btn-naver">네이버지도</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 인천출장마사지. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="shop-card-data.js"></script>
+    <script src="shops.json"></script>
+    <script src="detail.js"></script>
+</body>
+</html>
+
