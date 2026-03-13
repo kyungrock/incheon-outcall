@@ -262,6 +262,26 @@ class ShopApp {
             this.currentFilters.theme = e.target.value;
             this.renderShops();
         });
+
+        // 모바일 테마 퀵 필터 (전체 / 마사지 / 출장마사지) 버튼
+        const themeChips = document.querySelectorAll('.theme-chip');
+        const themeSelect = document.getElementById('theme-filter');
+        if (themeChips && themeChips.length > 0 && themeSelect) {
+            themeChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const value = chip.dataset.theme || 'all';
+                    // 내부 필터 상태 변경
+                    this.currentFilters.theme = value;
+                    // 셀렉트 값도 동기화
+                    themeSelect.value = value;
+                    // 활성화 스타일 변경
+                    themeChips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    // 필터 적용
+                    this.renderShops();
+                });
+            });
+        }
     }
 
     // 필터링된 업체 목록 반환
@@ -301,18 +321,26 @@ class ShopApp {
                 const theme = this.currentFilters.theme;
                 const services = shop.services || [];
                 const serviceStr = services.join(' ');
+
+                // 출장 여부 판별 (공통 로직)
+                const isOutcall =
+                    serviceStr.includes('출장') ||
+                    shop.type === '출장마사지' ||
+                    shop.description?.includes('출장') ||
+                    shop.description?.includes('홈타이');
                 
                 // 테마 매칭 로직
                 let matches = false;
                 if (theme === '마사지') {
-                    matches = serviceStr.includes('마사지') || 
-                             serviceStr.includes('스웨디시') || 
-                             serviceStr.includes('아로마');
+                    // 마사지 계열 + 출장 키워드가 없는 순수 마사지샵만
+                    const isMassageType =
+                        serviceStr.includes('마사지') ||
+                        serviceStr.includes('스웨디시') ||
+                        serviceStr.includes('아로마');
+                    matches = isMassageType && !isOutcall;
                 } else if (theme === '출장마사지' || theme === '출장') {
-                    matches = serviceStr.includes('출장') || 
-                             shop.type === '출장마사지' ||
-                             shop.description?.includes('출장') ||
-                             shop.description?.includes('홈타이');
+                    // 출장 키워드가 있는 출장/홈타이 계열만
+                    matches = isOutcall;
                 } else if (theme === '스웨디시') {
                     matches = serviceStr.includes('스웨디시');
                 } else if (theme === '아로마마사지') {
