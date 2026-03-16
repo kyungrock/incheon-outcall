@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>인천출장마사지 게시판 - 후기 · 코스 리뷰 · 인천 여행기</title>
+    <meta name="description" content="인천출장마사지 후기, 실제 이용 리뷰, 인천 지역별 마사지 정보와 인천 여행기를 정리한 게시판입니다. 인천출장마사지 선택 전 실제 후기와 경험담을 확인해 보세요.">
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://kyungrock.github.io/incheon-outcall/board.html" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        .board-layout {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+        .board-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .board-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        .board-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        .hamburger {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #fff;
+        }
+        .hamburger-lines {
+            width: 18px;
+            height: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .hamburger-lines span {
+            display: block;
+            height: 2px;
+            border-radius: 999px;
+            background: #333;
+        }
+        .board-menu {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 260px;
+            height: 100%;
+            background: #fff;
+            box-shadow: -4px 0 16px rgba(0,0,0,0.12);
+            transform: translateX(100%);
+            transition: transform 0.25s ease-out;
+            z-index: 9999;
+            padding: 1rem 1.25rem 2rem;
+        }
+        .board-menu.open {
+            transform: translateX(0);
+        }
+        .board-menu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .board-menu-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .board-menu-close {
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .board-menu-links a {
+            display: block;
+            padding: 0.5rem 0;
+            font-size: 0.95rem;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .board-menu-links a:hover {
+            color: #007bff;
+        }
+        .post-list {
+            border-top: 1px solid #eee;
+            margin-top: 0.75rem;
+        }
+        .post-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .post-meta {
+            font-size: 0.78rem;
+            color: #999;
+            margin-bottom: 0.25rem;
+        }
+        .post-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .post-excerpt {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .post-content {
+            margin-top: 1.5rem;
+            line-height: 1.7;
+            font-size: 0.96rem;
+            color: #333;
+        }
+        .post-content h1,
+        .post-content h2,
+        .post-content h3 {
+            margin-top: 1.4rem;
+            margin-bottom: 0.6rem;
+        }
+        .post-content h1 {
+            font-size: 1.4rem;
+        }
+        .post-content h2 {
+            font-size: 1.2rem;
+        }
+        .post-content h3 {
+            font-size: 1.05rem;
+        }
+        .post-content ul {
+            margin: 0.5rem 0 0.8rem 1.2rem;
+        }
+        .post-tagline {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+        @media (max-width: 600px) {
+            .board-layout {
+                padding: 1rem 0.75rem 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="board-layout">
+        <div class="board-header">
+            <div>
+                <div class="board-title">인천출장마사지 게시판</div>
+                <div class="board-subtitle">인천출장마사지 후기 · 코스 리뷰 · 인천 여행기</div>
+            </div>
+            <div class="hamburger" id="board-menu-toggle" aria-label="게시판 메뉴 열기">
+                <div class="hamburger-lines">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+        <div class="post-list">
+            <div class="post-item">
+                <div class="post-meta">인천출장마사지 · 인천 전지역 · 오늘 작성</div>
+                <div class="post-title">인천출장마사지 처음 이용할 때 꼭 확인해야 할 5가지</div>
+                <div class="post-excerpt">
+                    인천출장마사지 업체가 너무 많다 보니 어디를 선택해야 할지 고민되실 거예요. 실제 후기 기준으로,
+                    처음 이용할 때 꼭 체크하면 좋은 포인트들을 정리해 보았습니다.
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="board-layout">
+        <article class="post-content">
+            <h1>인천출장마사지 처음 이용할 때 꼭 확인해야 할 5가지</h1>
+            <p class="post-tagline">
+                인천 남동구 · 부평구 · 송도 · 연수구 등 인천 전지역 인천출장마사지 후기를 기반으로 정리한 가이드입니다.
+                인천출장마사지를 처음 찾는 분들도 이 글만 읽으면 큰 실수 없이 선택하실 수 있어요.
+            </p>
+
+            <h2>1. 인천출장마사지 가능 지역과 이동 시간</h2>
+            <p>
+                인천출장마사지를 선택할 때 가장 먼저 봐야 하는 건 <strong>방문 가능 지역</strong>입니다.
+                같은 인천이라도 남동구, 부평구, 연수구, 송도, 미추홀구 등 지역마다 이동 시간이 크게 달라집니다.
+                업체 소개에 적힌 <strong>“인천 전지역 출장 가능 / 일부 지역 추가요금”</strong> 안내를 먼저 확인하세요.
+            </p>
+            <ul>
+                <li>인천 전지역 출장 가능한지, 특정 구만 가능한지</li>
+                <li>송도·영종도처럼 거리가 먼 지역은 추가요금이 있는지</li>
+                <li>이동 시간(예: 인천 시내 기준 30분 이내 도착)을 명시해 두었는지</li>
+            </ul>
+
+            <h2>2. 코스 구성과 인천출장마사지 가격대</h2>
+            <p>
+                인천출장마사지 코스는 보통 <strong>60분 · 90분 · 120분</strong> 단위로 구성되어 있고,
+                스웨디시, 아로마, 감성테라피, 힐링 코스 등으로 나뉩니다.
+                이 사이트 메인 페이지에서도 각 업체 카드 하단에 <strong>“가격: 60,000원~”</strong>처럼
+                기준가를 확인할 수 있으니, 비슷한 지역의 다른 인천출장마사지 업체와 함께 비교해 보세요.
+            </p>
+            <ul>
+                <li>기본 코스(60분 기준)가 60,000원~인지, 80,000원~인지</li>
+                <li>추가옵션이나 야간·주말 할증이 있는지</li>
+                <li>현금 결제 / 계좌 이체 등 결제 방식 안내가 있는지</li>
+            </ul>
+
+            <h2>3. 관리사 연령대와 스타일</h2>
+            <p>
+                인천출장마사지 후기를 보면, <strong>관리사 연령대와 스타일</strong>이 만족도에 큰 영향을 줍니다.
+                “20대 한국인 관리사”, “30대 힐링 위주 관리사”, “경력 5년 이상” 등
+                본인에게 맞는 스타일을 안내해 주는지 확인해 보세요.
+            </p>
+            <p>
+                이 사이트의 업체 상세 페이지에서는 관리사 소개, 나이대, 스타일을 따로 정리해 두었기 때문에
+                인천출장마사지 선택 전에 한 번씩 읽어 보고 예약하시면 훨씬 안전합니다.
+            </p>
+
+            <h2>4. 실제 이용 후기와 재방문 의사</h2>
+            <p>
+                광고 문구보다 중요한 건 <strong>실제 후기</strong>입니다.
+                이 게시판에는 앞으로 인천출장마사지 이용 후기, 인천 여행하면서 들린 마사지샵 이야기,
+                지역별 추천 코스를 하나씩 채워 넣을 예정입니다.
+            </p>
+            <p>
+                후기에서 특히 눈여겨볼 부분은 다음과 같습니다.
+            </p>
+            <ul>
+                <li>“시간을 충분히 채워줬다 / 중간에 줄였다” 같은 시간 관련 평가</li>
+                <li>“다음에 또 예약하고 싶다”는 재방문 의사 표현</li>
+                <li>사진·동선 설명 등 실제로 다녀온 사람이 아니면 쓰기 힘든 디테일</li>
+            </ul>
+
+            <h2>5. 인천출장마사지 예약 전 마지막 체크포인트</h2>
+            <p>
+                마지막으로 인천출장마사지 예약 전에는 아래 네 가지만 다시 확인해 보세요.
+            </p>
+            <ul>
+                <li>내가 있는 지역(동·구)까지 출장 가능한지</li>
+                <li>원하는 시간대(퇴근 후, 심야, 주말)에 예약이 가능한지</li>
+                <li>코스 구성과 가격이 미리 안내된 내용과 같은지</li>
+                <li>도착까지 예상 소요 시간(예: 30분 이내)을 안내해 주는지</li>
+            </ul>
+
+            <h2>마무리 · 인천출장마사지를 똑똑하게 선택하는 방법</h2>
+            <p>
+                인천출장마사지는 잘만 선택하면 집이나 숙소에서 편하게 힐링을 받을 수 있는 좋은 서비스입니다.
+                이 사이트의 업체 카드와 게시판 후기를 함께 참고하면,
+                <strong>가격, 지역, 관리사 스타일</strong>을 한 번에 비교하면서
+                나에게 맞는 인천출장마사지를 훨씬 쉽게 찾을 수 있습니다.
+            </p>
+            <p>
+                앞으로 이 게시판에는 인천 각 지역(송도, 부평, 남동구, 연수구, 미추홀구 등)의
+                <strong>실제 인천출장마사지 후기와 인천 여행 동선</strong>을 꾸준히 추가할 예정입니다.
+                오늘은 이 글 하나로 시작하지만, 시간이 지날수록 인천출장마사지 선택에 도움이 되는
+                진짜 정보들만 차곡차곡 쌓아갈게요.
+            </p>
+        </article>
+    </main>
+
+    <div class="board-menu" id="board-menu">
+        <div class="board-menu-header">
+            <div class="board-menu-title">게시판 메뉴</div>
+            <div class="board-menu-close" id="board-menu-close" aria-label="닫기">&times;</div>
+        </div>
+        <div class="board-menu-links">
+            <a href="index.html">메인으로 (인천출장마사지 업체 비교)</a>
+            <a href="#top">인천출장마사지 첫 이용 가이드</a>
+            <a href="#none">송도 · 연수구 인천출장마사지 후기 (작성 예정)</a>
+            <a href="#none">부평 · 남동구 인천출장마사지 후기 (작성 예정)</a>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var toggle = document.getElementById('board-menu-toggle');
+            var menu = document.getElementById('board-menu');
+            var closeBtn = document.getElementById('board-menu-close');
+
+            if (!toggle || !menu) return;
+
+            toggle.addEventListener('click', function () {
+                menu.classList.add('open');
+            });
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    menu.classList.remove('open');
+                });
+            }
+
+            menu.addEventListener('click', function (e) {
+                if (e.target === menu) {
+                    menu.classList.remove('open');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
+

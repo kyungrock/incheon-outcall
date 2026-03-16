@@ -19,7 +19,7 @@ class ShopApp {
             region: 'all',
             district: 'all',
             dong: 'all',
-            theme: 'all'
+            theme: 'all',
         };
         
         this.init();
@@ -61,6 +61,39 @@ class ShopApp {
 
     init() {
         this.setupFilters();
+
+        // 초기 진입 시 기본 필터:
+        // 지역: 인천, 테마: 출장마사지 (수도권 출장 위주 노출)
+        const regionSelect = document.getElementById('region-filter');
+        const themeSelect = document.getElementById('theme-filter');
+        const themeChips = document.querySelectorAll('.theme-chip');
+
+        if (regionSelect) {
+            // 인천이 옵션에 있을 때만 기본값으로 설정
+            const hasIncheon = Array.from(regionSelect.options).some(
+                (opt) => opt.value === '인천'
+            );
+            if (hasIncheon) {
+                regionSelect.value = '인천';
+                this.currentFilters.region = '인천';
+            }
+        }
+
+        if (themeSelect) {
+            themeSelect.value = '출장마사지';
+            this.currentFilters.theme = '출장마사지';
+        }
+
+        // 모바일 테마 칩도 출장마사지로 활성화
+        if (themeChips && themeChips.length > 0) {
+            themeChips.forEach((chip) => {
+                chip.classList.remove('active');
+                if (chip.dataset.theme === '출장마사지') {
+                    chip.classList.add('active');
+                }
+            });
+        }
+
         this.renderShops();
         this.setupEventListeners();
     }
@@ -289,10 +322,25 @@ class ShopApp {
         return this.shops.filter(shop => {
             // Region 필터
             if (this.currentFilters.region !== 'all') {
-                const shopRegions = shop.region ? shop.region.split(',').map(r => r.trim()) : [];
-                if (!shopRegions.includes(this.currentFilters.region)) {
-                    return false;
+                const shopRegions = shop.region
+                    ? shop.region.split(',').map(r => r.trim())
+                    : [];
+
+                // 수도권(서울·경기·인천) 한 묶음 처리:
+                // 지역=인천 + 테마=출장마사지(또는 출장)일 때
+                // 서울·경기·인천 출장마사지 업체를 한 번에 보여줌
+                const selectedRegion = this.currentFilters.region;
+                let targetRegions = [selectedRegion];
+
+                if (
+                    (selectedRegion === '인천') &&
+                    (this.currentFilters.theme === '출장마사지' || this.currentFilters.theme === '출장')
+                ) {
+                    targetRegions = ['서울', '경기', '인천'];
                 }
+
+                const matchesRegion = shopRegions.some(r => targetRegions.includes(r));
+                if (!matchesRegion) return false;
             }
 
             // District 필터
