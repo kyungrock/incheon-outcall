@@ -10,6 +10,14 @@ class DetailPage {
     init() {
         const urlParams = new URLSearchParams(window.location.search);
         const shopId = urlParams.get('id');
+
+        // 목록으로 돌아갈 때 사용할 필터 파라미터 보관
+        this.backFilters = {
+            region: urlParams.get('region') || 'all',
+            district: urlParams.get('district') || 'all',
+            dong: urlParams.get('dong') || 'all',
+            theme: urlParams.get('theme') || 'all',
+        };
         
         if (!shopId) {
             this.showError('업체 정보를 찾을 수 없습니다.');
@@ -45,6 +53,30 @@ class DetailPage {
         }
         
         this.renderDetail(shop, detailInfo);
+        this.setupBackLink();
+    }
+
+    // 목록으로 돌아가기 / 브레드크럼에 필터 상태 반영
+    setupBackLink() {
+        const backLink = document.querySelector('.btn-back');
+        if (!backLink) return;
+
+        const params = new URLSearchParams();
+        if (this.backFilters.region && this.backFilters.region !== 'all') {
+            params.set('region', this.backFilters.region);
+        }
+        if (this.backFilters.district && this.backFilters.district !== 'all') {
+            params.set('district', this.backFilters.district);
+        }
+        if (this.backFilters.dong && this.backFilters.dong !== 'all') {
+            params.set('dong', this.backFilters.dong);
+        }
+        if (this.backFilters.theme && this.backFilters.theme !== 'all') {
+            params.set('theme', this.backFilters.theme);
+        }
+
+        const qs = params.toString();
+        backLink.href = qs ? `index.html?${qs}` : 'index.html';
     }
 
     renderDetail(shop, detailInfo) {
@@ -155,23 +187,9 @@ class DetailPage {
             }
         }
 
-        // 출장마사지 타입인지 확인 (지도 숨김용)
-        const type = (detailInfo?.type || shop.type || '').toString();
-        const isOutcall =
-            type.includes('출장') ||
-            type.includes('outcall') ||
-            (shop.services || []).some((s) => s.includes('출장'));
-
         const mapPanel = bottomBar.querySelector('.bottom-bar-map-panel');
         const mapToggle = bottomBar.querySelector('.bottom-bar-map-toggle');
         if (!mapPanel || !mapToggle) return;
-
-        if (isOutcall) {
-            // 출장마사지는 지도 버튼 숨김
-            mapPanel.style.display = 'none';
-            mapToggle.style.display = 'none';
-            return;
-        }
 
         // 초기에는 패널 닫힘 상태
         mapPanel.style.display = 'none';
@@ -180,7 +198,9 @@ class DetailPage {
         const hasCoords =
             coords && typeof coords.latitude === 'number' && typeof coords.longitude === 'number';
 
-        const query = encodeURIComponent(fullAddress || location || shop.name || '');
+        // 지도 검색에 사용할 문자열: 상세주소 우선, 없으면 지역, 그것도 없으면 업체명
+        const querySource = fullAddress || location || shop.name || '';
+        const query = encodeURIComponent(querySource);
 
         const openTmap = () => {
             if (hasCoords) {
