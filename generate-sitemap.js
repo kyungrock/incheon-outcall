@@ -41,12 +41,12 @@ function generateSitemap() {
     });
   }
 
-  // 업체별 detail.html?id=업체ID
+  // 업체별 정적 상세 페이지 (shops/{id}.html)
   shops.forEach((shop) => {
     if (!shop || !shop.id) return;
     const id = encodeURIComponent(String(shop.id));
     urls.push({
-      loc: `${BASE_URL}/detail.html?id=${id}`,
+      loc: `${BASE_URL}/shops/${id}.html`,
       priority: '0.6',
       changefreq: 'daily',
     });

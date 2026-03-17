@@ -543,16 +543,9 @@ class ShopApp {
         const shop = this.shops.find(s => s.id == shopId);
         if (!shop) return;
 
-        // URL 파라미터로 필터 정보 전달 (동적 상세 페이지)
-        const params = new URLSearchParams();
-        params.set('id', shopId);
-        if (this.currentFilters.region !== 'all') params.set('region', this.currentFilters.region);
-        if (this.currentFilters.district !== 'all') params.set('district', this.currentFilters.district);
-        if (this.currentFilters.dong !== 'all') params.set('dong', this.currentFilters.dong);
-        if (this.currentFilters.theme !== 'all') params.set('theme', this.currentFilters.theme);
-
-        // 동적 상세 페이지로 이동
-        window.location.href = `detail.html?${params.toString()}`;
+        // 정적 상세 페이지로 이동 (shops/{id}.html)
+        const targetId = encodeURIComponent(shop.id);
+        window.location.href = `shops/${targetId}.html`;
     }
 }
 

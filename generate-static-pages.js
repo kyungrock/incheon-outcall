@@ -1,321 +1,289 @@
-// 정적 HTML 페이지 생성 스크립트
-// Node.js로 실행: node generate-static-pages.js
+// 정적 업체 상세 페이지 생성 스크립트
+// 사용법: node generate-static-pages.js
 
 const fs = require('fs');
 const path = require('path');
 
-// shop-card-data.js와 shops.json 읽기
-function loadData() {
-    const shopCardDataPath = path.join(__dirname, 'shop-card-data.js');
-    const shopsJsonPath = path.join(__dirname, 'shops.json');
-    const templatePath = path.join(__dirname, 'detail-template.html');
+const ROOT_DIR = __dirname;
+const SHOPS_JSON_PATH = path.join(ROOT_DIR, 'shops.json');
+const OUTPUT_DIR = path.join(ROOT_DIR, 'shops');
 
-    // shop-card-data.js 읽기
-    const shopCardDataContent = fs.readFileSync(shopCardDataPath, 'utf8');
+function loadShops() {
+  const raw = fs.readFileSync(SHOPS_JSON_PATH, 'utf8');
 
-    // vm 모듈을 사용하여 안전하게 실행
-    const vm = require('vm');
+  let jsonStr = raw.replace(/^window\.shopsData\s*=\s*/, '').trim();
+  jsonStr = jsonStr.replace(/;?\s*$/, '');
 
-    // window.shopCardData = [...] 부분만 추출해서 실행 (파일 전체 실행 시 문법 오류 가능성 방지)
-    const dataMatch = shopCardDataContent.match(/window\.shopCardData\s*=\s*(\[[\s\S]*?\]);/);
-    if (!dataMatch) {
-        throw new Error('shop-card-data.js에서 window.shopCardData 배열을 찾을 수 없습니다.');
-    }
-
-    let shops;
-    try {
-        const context = {};
-        vm.createContext(context);
-        // 배열 리터럴만 실행해서 결과를 shops 변수로 받기
-        shops = vm.runInContext(dataMatch[1], context);
-        if (!Array.isArray(shops)) {
-            throw new Error('추출된 shopCardData가 배열이 아닙니다.');
-        }
-    } catch (e) {
-        throw new Error('shop-card-data.js를 파싱할 수 없습니다: ' + e.message);
-    }
-
-    // shops.json 읽기 (JavaScript 형식)
-    const shopsJsonContent = fs.readFileSync(shopsJsonPath, 'utf8');
-    let shopsData;
-
-    try {
-        // window.shopsData = {...} 형식 실행
-        const context2 = { window: {} };
-        vm.createContext(context2);
-        vm.runInContext(shopsJsonContent, context2);
-        shopsData = context2.window.shopsData || { shops: [] };
-    } catch (e) {
-        // 실행 실패 시 빈 객체
-        console.warn('shops.json 실행 실패, 빈 데이터 사용:', e.message);
-        shopsData = { shops: [] };
-    }
-
-    // 템플릿 읽기
-    const template = fs.readFileSync(templatePath, 'utf8');
-
-    return { shops, shopsData, template };
+  const data = JSON.parse(jsonStr);
+  if (!Array.isArray(data.shops)) {
+    throw new Error('shops.json의 shops 배열을 찾을 수 없습니다.');
+  }
+  return data.shops;
 }
 
-// 파일명 생성 (URL 안전)
-function sanitizeFileName(str) {
-    return str
-        .replace(/[^a-zA-Z0-9가-힣]/g, '-')
-        .replace(/-+/g, '-')
-        .toLowerCase();
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-// HTML 생성
-function generateHTML(shop, detailInfo, template, filters) {
-    let html = template;
+function buildCoursesHtml(courses) {
+  if (!Array.isArray(courses) || courses.length === 0) {
+    return '<li class="course-item">코스 정보는 문의 부탁드립니다.</li>';
+  }
 
-    // 기본 정보 치환
-    html = html.replace(/\{\{SHOP_NAME\}\}/g, shop.name || '');
-    html = html.replace(/\{\{SHOP_DESCRIPTION\}\}/g, (detailInfo?.description || shop.description || '').replace(/"/g, '&quot;'));
-    html = html.replace(/\{\{SHOP_RATING\}\}/g, (shop.rating || 0).toFixed(1));
-    html = html.replace(/\{\{SHOP_REVIEW_COUNT\}\}/g, shop.reviewCount || 0);
-    
-    const locationParts = [];
-    if (shop.region) locationParts.push(shop.region);
-    if (shop.district) locationParts.push(shop.district);
-    if (shop.dong) locationParts.push(shop.dong);
-    html = html.replace(/\{\{SHOP_LOCATION\}\}/g, locationParts.join(' '));
-    
-    html = html.replace(/\{\{SHOP_PHONE\}\}/g, shop.phone || '문의');
-    html = html.replace(/\{\{SHOP_PRICE\}\}/g, shop.price || '가격 문의');
-    html = html.replace(/\{\{SHOP_IMAGE\}\}/g, shop.image || 'images/default.jpg');
-    html = html.replace(/\{\{SHOP_OPERATING_HOURS\}\}/g, detailInfo?.operatingHours || shop.operatingHours || '문의');
-    html = html.replace(/\{\{SHOP_DETAIL_ADDRESS\}\}/g, detailInfo?.detailAddress || shop.detailAddress || shop.address || '');
+  const items = [];
+  courses.forEach((course) => {
+    const category = escapeHtml(course.category || '');
+    const header =
+      category && category.trim().length > 0
+        ? `<li class="course-category">${category}</li>`
+        : '';
 
-    // 코스 섹션
-    let coursesSection = '';
-    if (detailInfo?.courses && detailInfo.courses.length > 0) {
-        coursesSection = '<div class="detail-section">';
-        coursesSection += '<h2 class="detail-section-title">코스 및 가격</h2>';
-        coursesSection += '<ul class="courses-list">';
-        
-        detailInfo.courses.forEach(category => {
-            coursesSection += '<li class="course-category">';
-            coursesSection += `<h3 class="course-category-title">${category.category}</h3>`;
-            
-            category.items.forEach(item => {
-                coursesSection += '<div class="course-item">';
-                coursesSection += `<div class="course-name">${item.name}</div>`;
-                coursesSection += '<div class="course-details">';
-                coursesSection += `<span>가격: ${item.price}</span>`;
-                coursesSection += `<span>소요시간: ${item.duration}</span>`;
-                coursesSection += '</div>';
-                if (item.description) {
-                    coursesSection += `<div style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">${item.description}</div>`;
-                }
-                coursesSection += '</div>';
-            });
-            
-            coursesSection += '</li>';
-        });
-        
-        coursesSection += '</ul>';
-        coursesSection += '</div>';
-    }
-    html = html.replace(/\{\{COURSES_SECTION\}\}/g, coursesSection);
+    if (Array.isArray(course.items)) {
+      course.items.forEach((item) => {
+        const name = escapeHtml(item.name || '');
+        const price = escapeHtml(item.price || '');
+        const duration = escapeHtml(item.duration || '');
+        const desc = escapeHtml(item.description || '');
 
-    // 관리사 정보
-    html = html.replace(/\{\{STAFF_INFO\}\}/g, detailInfo?.staffInfo || '상세 정보는 문의 바랍니다.');
-
-    // 특징 리스트
-    let featuresList = '';
-    if (detailInfo?.features && detailInfo.features.length > 0) {
-        featuresList = detailInfo.features.map(feature => 
-            `<li class="feature-item">${feature}</li>`
-        ).join('');
-    }
-    html = html.replace(/\{\{FEATURES_LIST\}\}/g, featuresList);
-
-    // 리뷰 리스트
-    const reviews = [];
-    if (shop.reviews && Array.isArray(shop.reviews)) {
-        shop.reviews.forEach(review => {
-            reviews.push({
-                name: review.author || '익명',
-                rating: review.rating || 5,
-                date: review.date || new Date().toISOString().split('T')[0],
-                comment: review.review || ''
-            });
-        });
-    }
-    if (detailInfo?.reviews && Array.isArray(detailInfo.reviews)) {
-        detailInfo.reviews.forEach(review => {
-            reviews.push({
-                name: review.name || '익명',
-                rating: review.rating || 5,
-                date: review.date || new Date().toISOString().split('T')[0],
-                comment: review.comment || ''
-            });
-        });
-    }
-
-    let reviewsList = '';
-    if (reviews.length > 0) {
-        reviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-        reviewsList = reviews.slice(0, 10).map(review => {
-            return `
-                <li class="review-item">
-                    <div class="review-header">
-                        <span class="review-author">${review.name}</span>
-                        <div>
-                            <span class="review-rating">⭐ ${review.rating}</span>
-                            <span class="review-date">${review.date}</span>
-                        </div>
-                    </div>
-                    <div class="review-comment">${review.comment}</div>
-                </li>
-            `;
-        }).join('');
-    } else {
-        reviewsList = '<p>아직 리뷰가 없습니다.</p>';
-    }
-    html = html.replace(/\{\{REVIEWS_LIST\}\}/g, reviewsList);
-
-    // 필터 정보를 URL 파라미터로 추가
-    const scriptTag = html.match(/<script[^>]*src="detail\.js"[^>]*><\/script>/);
-    if (scriptTag) {
-        const params = new URLSearchParams();
-        params.set('id', shop.id);
-        if (filters.region !== 'all') params.set('region', filters.region);
-        if (filters.district !== 'all') params.set('district', filters.district);
-        if (filters.dong !== 'all') params.set('dong', filters.dong);
-        if (filters.theme !== 'all') params.set('theme', filters.theme);
-        
-        const newScriptTag = scriptTag[0].replace('detail.js', `detail.js?${params.toString()}`);
-        html = html.replace(scriptTag[0], newScriptTag);
-    }
-
-    return html;
-}
-
-// 파일명 생성 (필터 포함)
-function generateFileName(shop, filters) {
-    let fileName = 'company-';
-    
-    // 필터 정보 추가
-    if (filters.region !== 'all') {
-        fileName += sanitizeFileName(filters.region) + '-';
-    }
-    if (filters.district !== 'all') {
-        fileName += sanitizeFileName(filters.district) + '-';
-    }
-    if (filters.dong !== 'all') {
-        fileName += sanitizeFileName(filters.dong) + '-';
-    }
-    if (filters.theme !== 'all') {
-        fileName += sanitizeFileName(filters.theme) + '-';
-    }
-    
-    // 업체명 추가
-    fileName += sanitizeFileName(shop.name);
-    
-    return fileName + '.html';
-}
-
-// 테마 매칭 확인
-function matchesTheme(shop, theme) {
-    if (theme === 'all') return true;
-    
-    const services = shop.services || [];
-    const serviceStr = services.join(' ');
-    
-    if (theme === '마사지') {
-        return serviceStr.includes('마사지') || 
-               serviceStr.includes('스웨디시') || 
-               serviceStr.includes('아로마');
-    } else if (theme === '출장마사지' || theme === '출장') {
-        return serviceStr.includes('출장') || 
-               shop.type === '출장마사지' ||
-               shop.description?.includes('출장') ||
-               shop.description?.includes('홈타이');
-    } else if (theme === '스웨디시') {
-        return serviceStr.includes('스웨디시');
-    } else if (theme === '아로마마사지') {
-        return serviceStr.includes('아로마');
-    }
-    
-    return false;
-}
-
-// 메인 실행
-function main() {
-    console.log('정적 HTML 페이지 생성 시작...');
-    
-    const { shops, shopsData, template } = loadData();
-    const themes = ['all', '마사지', '출장마사지', '스웨디시', '아로마마사지', '출장'];
-    
-    let generatedCount = 0;
-    const generatedFiles = new Set();
-
-    shops.forEach(shop => {
-        // shops.json에서 상세 정보 찾기
-        let detailInfo = shopsData.shops?.find(s => 
-            s.id === shop.id.toString() ||
-            s.name === shop.name ||
-            s.phone === shop.phone
+        items.push(
+          `${header}<li class="course-item"><div class="course-main"><span class="course-name">${name}</span><span class="course-price">${price}</span></div><div class="course-sub"><span class="course-duration">${duration}</span><span class="course-desc">${desc}</span></div></li>`
         );
-
-        // 지역 정보 추출
-        const regions = shop.region ? shop.region.split(',').map(r => r.trim()) : ['all'];
-        const districts = shop.district ? [shop.district] : ['all'];
-        const dongs = shop.dong ? [shop.dong] : ['all'];
-
-        // 각 조합에 대해 HTML 생성
-        regions.forEach(region => {
-            districts.forEach(district => {
-                dongs.forEach(dong => {
-                    themes.forEach(theme => {
-                        // 테마 필터 확인
-                        if (theme !== 'all' && !matchesTheme(shop, theme)) {
-                            return;
-                        }
-
-                        const filters = {
-                            region: region === 'all' ? 'all' : region,
-                            district: district === 'all' ? 'all' : district,
-                            dong: dong === 'all' ? 'all' : dong,
-                            theme: theme
-                        };
-
-                        const fileName = generateFileName(shop, filters);
-                        
-                        // 중복 방지
-                        if (generatedFiles.has(fileName)) {
-                            return;
-                        }
-                        generatedFiles.add(fileName);
-
-                        const html = generateHTML(shop, detailInfo, template, filters);
-                        const filePath = path.join(__dirname, fileName);
-                        
-                        fs.writeFileSync(filePath, html, 'utf8');
-                        generatedCount++;
-                        
-                        if (generatedCount % 100 === 0) {
-                            console.log(`${generatedCount}개 파일 생성 완료...`);
-                        }
-                    });
-                });
-            });
-        });
-    });
-
-    console.log(`완료! 총 ${generatedCount}개의 정적 HTML 파일이 생성되었습니다.`);
-}
-
-// 실행
-if (require.main === module) {
-    try {
-        main();
-    } catch (error) {
-        console.error('오류 발생:', error);
-        process.exit(1);
+      });
     }
+  });
+
+  if (items.length === 0) {
+    return '<li class="course-item">코스 정보는 문의 부탁드립니다.</li>';
+  }
+  return items.join('\n');
 }
 
-module.exports = { generateHTML, generateFileName, matchesTheme };
+function buildFeaturesHtml(features) {
+  if (!Array.isArray(features) || features.length === 0) {
+    return '<li class="feature-item">업체 특징은 문의 시 안내드립니다.</li>';
+  }
+  return features
+    .map((f) => `<li class="feature-item">${escapeHtml(f)}</li>`)
+    .join('\n');
+}
+
+function buildReviewsHtml(reviews) {
+  if (!Array.isArray(reviews) || reviews.length === 0) {
+    return '<li class="review-item">아직 등록된 후기가 없습니다.</li>';
+  }
+  return reviews
+    .map((r) => {
+      const name = escapeHtml(r.name || r.author || '익명');
+      const rating = typeof r.rating === 'number' ? r.rating : '';
+      const date = escapeHtml(r.date || '');
+      const comment = escapeHtml(r.comment || r.review || '');
+      return `<li class="review-item"><div class="review-header"><span class="review-author">${name}</span><span class="review-rating">⭐ ${rating}</span><span class="review-date">${date}</span></div><p class="review-comment">${comment}</p></li>`;
+    })
+    .join('\n');
+}
+
+function buildHtmlForShop(shop) {
+  const id = String(shop.id);
+  const name = escapeHtml(shop.name || '업체명 미정');
+  const region = escapeHtml(shop.region || '');
+  const district = escapeHtml(shop.district || '');
+  const dong = escapeHtml(shop.dong || '');
+  const locationText = [region, district, dong].filter(Boolean).join(' ');
+
+  const rating = typeof shop.rating === 'number' ? shop.rating.toFixed(1) : '0.0';
+  const reviewCount =
+    typeof shop.reviewCount === 'number'
+      ? shop.reviewCount
+      : Array.isArray(shop.reviews)
+      ? shop.reviews.length
+      : 0;
+
+  const phone = escapeHtml(shop.phone || '');
+  const telHref = phone ? `tel:${phone.replace(/[^0-9+]/g, '')}` : '#';
+
+  const price =
+    escapeHtml(
+      shop.price ||
+        (shop.courses &&
+          shop.courses[0] &&
+          shop.courses[0].items &&
+          shop.courses[0].items[0] &&
+          shop.courses[0].items[0].price) ||
+        '가격 문의'
+    );
+
+  const description = escapeHtml(
+    shop.description ||
+      `${name} ${locationText} 힐링 마사지샵입니다. 자세한 내용은 문의 주세요.`
+  );
+
+  const operatingHours = escapeHtml(shop.operatingHours || '문의');
+  const fullAddress = escapeHtml(
+    [shop.address, shop.detailAddress].filter(Boolean).join(' ')
+  );
+
+  const imageUrl = escapeHtml(
+    shop.image || 'https://kyungrock.github.io/incheon-outcall/images/default.jpg'
+  );
+  const altText = escapeHtml(
+    shop.alt || `${name} - ${locationText} 출장마사지 / 마사지샵`
+  );
+
+  const coursesHtml = buildCoursesHtml(shop.courses);
+  const featuresHtml = buildFeaturesHtml(shop.features);
+  const reviewsHtml = buildReviewsHtml(shop.reviews);
+
+  const title = `${name} - ${locationText} 인천출장마사지 / 마사지`;
+  const pageDescription = `${name} | ${locationText} | ${description}`;
+  const canonicalUrl = `https://kyungrock.github.io/incheon-outcall/shops/${encodeURIComponent(
+    id
+  )}.html`;
+
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <meta name="description" content="${pageDescription}">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="${canonicalUrl}">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${pageDescription}">
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:url" content="${canonicalUrl}">
+  <meta property="og:image" content="${imageUrl}">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="../index.html" class="logo">인천출장마사지</a>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="detail-container">
+      <a href="../index.html" class="btn-back">← 목록으로 돌아가기</a>
+
+      <div class="detail-header">
+        <h1 class="detail-title">${name}</h1>
+        <div class="detail-meta">
+          <div class="detail-rating">
+            ⭐ ${rating} (${reviewCount})
+          </div>
+          <div class="detail-meta-location">📍 ${locationText}</div>
+          ${
+            phone
+              ? `<a href="${telHref}" class="detail-meta-phone">📞 ${phone}</a>`
+              : ''
+          }
+          <div class="detail-meta-price">💰 ${price}</div>
+        </div>
+      </div>
+
+      <img src="${imageUrl}" alt="${altText}" class="detail-image" onerror="this.src='../images/default.jpg'">
+
+      <div class="detail-section">
+        <h2 class="detail-section-title">업체 소개</h2>
+        <p class="detail-description">${description}</p>
+        <div class="detail-info-item">
+          <span class="detail-info-label">운영시간:</span>
+          <span class="detail-info-value">${operatingHours}</span>
+        </div>
+        ${
+          fullAddress
+            ? `<div class="detail-info-item"><span class="detail-info-label">상세주소:</span><span class="detail-info-value">${fullAddress}</span></div>`
+            : ''
+        }
+      </div>
+
+      <div class="detail-section courses-section">
+        <h2 class="detail-section-title">코스 및 가격</h2>
+        <ul class="courses-list">
+${coursesHtml}
+        </ul>
+      </div>
+
+      <div class="detail-section staff-section">
+        <h2 class="detail-section-title">관리사 정보</h2>
+        <p class="detail-description">${escapeHtml(
+          shop.staffInfo || '관리사 정보는 문의 시 안내드립니다.'
+        )}</p>
+      </div>
+
+      <div class="detail-section features-section">
+        <h2 class="detail-section-title">특징</h2>
+        <ul class="features-list">
+${featuresHtml}
+        </ul>
+      </div>
+
+      <div class="detail-section">
+        <h2 class="detail-section-title">리뷰</h2>
+        <ul class="reviews-list">
+${reviewsHtml}
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <div class="detail-bottom-bar">
+    ${
+      phone
+        ? `<a href="${telHref}" class="bottom-bar-phone">📞 전화걸기</a>`
+        : '<span class="bottom-bar-phone disabled">📞 전화번호 문의</span>'
+    }
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 인천출장마사지. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
+`;
+}
+
+function generateStaticPages() {
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  }
+
+  const shops = loadShops();
+  let count = 0;
+
+  shops.forEach((shop) => {
+    if (!shop || !shop.id) return;
+    const id = String(shop.id);
+    const filename = `${id}.html`;
+    const filepath = path.join(OUTPUT_DIR, filename);
+
+    const html = buildHtmlForShop(shop);
+    fs.writeFileSync(filepath, html, 'utf8');
+    count += 1;
+  });
+
+  console.log(
+    `✅ 정적 상세 페이지 생성 완료: ${count}개 파일 생성 (경로: shops/*.html)`
+  );
+}
+
+if (require.main === module) {
+  try {
+    generateStaticPages();
+  } catch (err) {
+    console.error('정적 페이지 생성 중 오류:', err);
+    process.exit(1);
+  }
+}
+
+module.exports = { generateStaticPages };
+
