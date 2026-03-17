@@ -1,17 +1,35 @@
-// sitemap.xml 자동 생성 스크립트
-// 사용법: node generate-sitemap.js
-// GitHub Pages 기준 URL: https://kyungrock.github.io/incheon-outcall/
-
 const fs = require('fs');
 const path = require('path');
 
 const BASE_URL = 'https://kyungrock.github.io/incheon-outcall';
 const OUTPUT_FILE = path.join(__dirname, 'sitemap.xml');
+const SHOPS_JSON_PATH = path.join(__dirname, 'shops.json');
+
+function loadShops() {
+  const raw = fs.readFileSync(SHOPS_JSON_PATH, 'utf8');
+
+  // 앞부분의 window.shopsData = 제거
+  let jsonStr = raw.replace(/^window\.shopsData\s*=\s*/, '').trim();
+  // 끝부분의 세미콜론 제거
+  jsonStr = jsonStr.replace(/;?\s*$/, '');
+
+  const data = JSON.parse(jsonStr);
+  return Array.isArray(data.shops) ? data.shops : [];
+}
+
+function escapeXml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 function generateSitemap() {
   const files = fs.readdirSync(__dirname);
+  const shops = loadShops();
 
-  // index.html + company-로 시작하는 상세 페이지들만 포함
   const urls = [];
 
   // 메인 페이지
@@ -23,20 +41,16 @@ function generateSitemap() {
     });
   }
 
-  // 상세 페이지들
-  files
-    .filter(
-      (file) =>
-        file.startsWith('company-') &&
-        file.endsWith('.html')
-    )
-    .forEach((file) => {
-      urls.push({
-        loc: `${BASE_URL}/${encodeURI(file)}`,
-        priority: '0.8',
-        changefreq: 'weekly',
-      });
+  // 업체별 detail.html?id=업체ID
+  shops.forEach((shop) => {
+    if (!shop || !shop.id) return;
+    const id = encodeURIComponent(String(shop.id));
+    urls.push({
+      loc: `${BASE_URL}/detail.html?id=${id}`,
+      priority: '0.6',
+      changefreq: 'daily',
     });
+  });
 
   const now = new Date().toISOString();
 
@@ -44,7 +58,7 @@ function generateSitemap() {
     .map(
       (u) => `
   <url>
-    <loc>${u.loc}</loc>
+    <loc>${escapeXml(u.loc)}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>

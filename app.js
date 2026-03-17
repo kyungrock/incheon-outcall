@@ -62,40 +62,75 @@ class ShopApp {
     init() {
         this.setupFilters();
 
-        // 초기 진입 시 기본 필터:
-        // 지역: 인천, 테마: 출장마사지 (수도권 출장 위주 노출)
-        const regionSelect = document.getElementById('region-filter');
-        const themeSelect = document.getElementById('theme-filter');
-        const themeChips = document.querySelectorAll('.theme-chip');
-
-        if (regionSelect) {
-            // 인천이 옵션에 있을 때만 기본값으로 설정
-            const hasIncheon = Array.from(regionSelect.options).some(
-                (opt) => opt.value === '인천'
-            );
-            if (hasIncheon) {
-                regionSelect.value = '인천';
-                this.currentFilters.region = '인천';
-            }
-        }
-
-        if (themeSelect) {
-            themeSelect.value = '출장마사지';
-            this.currentFilters.theme = '출장마사지';
-        }
-
-        // 모바일 테마 칩도 출장마사지로 활성화
-        if (themeChips && themeChips.length > 0) {
-            themeChips.forEach((chip) => {
-                chip.classList.remove('active');
-                if (chip.dataset.theme === '출장마사지') {
-                    chip.classList.add('active');
-                }
-            });
-        }
+        // URL 파라미터 또는 기본값으로 초기 필터 설정
+        this.applyInitialFiltersFromUrl();
 
         this.renderShops();
         this.setupEventListeners();
+    }
+
+    // URL 파라미터 또는 기본값을 이용해 초기 필터/셀렉트/테마칩 설정
+    applyInitialFiltersFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+
+        const regionParam = params.get('region');
+        const districtParam = params.get('district');
+        const dongParam = params.get('dong');
+        const themeParam = params.get('theme');
+
+        // 기본값: 인천 + 출장마사지
+        const defaultRegion = '인천';
+        const defaultTheme = '출장마사지';
+
+        const regionSelect = document.getElementById('region-filter');
+        const districtSelect = document.getElementById('district-filter');
+        const dongSelect = document.getElementById('dong-filter');
+        const themeSelect = document.getElementById('theme-filter');
+        const themeChips = document.querySelectorAll('.theme-chip');
+
+        // 지역
+        if (regionSelect) {
+            const targetRegion = regionParam || defaultRegion;
+            const hasRegion = Array.from(regionSelect.options).some(
+                (opt) => opt.value === targetRegion
+            );
+            if (hasRegion) {
+                regionSelect.value = targetRegion;
+                this.currentFilters.region = targetRegion;
+            }
+        }
+
+        // 테마
+        if (themeSelect) {
+            const targetTheme = themeParam || defaultTheme;
+            const hasTheme = Array.from(themeSelect.options).some(
+                (opt) => opt.value === targetTheme
+            );
+            if (hasTheme) {
+                themeSelect.value = targetTheme;
+                this.currentFilters.theme = targetTheme;
+            }
+
+            // 모바일 테마 칩 활성화
+            if (themeChips && themeChips.length > 0) {
+                themeChips.forEach((chip) => {
+                    chip.classList.remove('active');
+                    if (chip.dataset.theme === this.currentFilters.theme) {
+                        chip.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        // 상세지역 / 동은 URL에 있을 때만 적용
+        if (districtSelect && districtParam && districtParam !== 'all') {
+            this.currentFilters.district = districtParam;
+            districtSelect.value = districtParam;
+        }
+        if (dongSelect && dongParam && dongParam !== 'all') {
+            this.currentFilters.dong = dongParam;
+            dongSelect.value = dongParam;
+        }
     }
 
     // 필터 옵션 동적 생성
