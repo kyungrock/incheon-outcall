@@ -1,4 +1,137 @@
 // 상세 페이지 데이터 로드 및 렌더링
+const SITE_ORIGIN = 'https://kyungrock.github.io/incheon-outcall';
+
+function absUrlForSeo(u) {
+    if (!u || typeof u !== 'string') return `${SITE_ORIGIN}/images/default.jpg`;
+    const t = u.trim();
+    if (/^https?:\/\//i.test(t)) return t;
+    return `${SITE_ORIGIN}/${t.replace(/^\//, '')}`;
+}
+
+function setMetaContent(attr, key, content) {
+    const sel = attr === 'property' ? `meta[property="${key}"]` : `meta[name="${key}"]`;
+    let el = document.head.querySelector(sel);
+    if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+}
+
+function setLinkHref(rel, href) {
+    let el = document.head.querySelector(`link[rel="${rel}"]`);
+    if (!el) {
+        el = document.createElement('link');
+        el.setAttribute('rel', rel);
+        document.head.appendChild(el);
+    }
+    el.setAttribute('href', href);
+}
+
+function setJsonLdDetail(data) {
+    const el = document.getElementById('jsonld-detail');
+    const text = JSON.stringify(data);
+    if (el) {
+        el.textContent = text;
+    } else {
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.id = 'jsonld-detail';
+        script.textContent = text;
+        document.head.appendChild(script);
+    }
+}
+
+/** 검색·SNS 봇용 canonical, Open Graph, Twitter, JSON-LD */
+function applyDetailSeo(shop, detailInfo) {
+    const id = encodeURIComponent(String(shop.id));
+    const pageUrl = `${SITE_ORIGIN}/detail.html?id=${id}`;
+    const title = `${shop.name} - 인천출장마사지`;
+    const descRaw =
+        shop.description ||
+        detailInfo?.description ||
+        `${shop.name} 인천출장마사지 / 마사지 업체 상세 정보`;
+    const desc = String(descRaw).slice(0, 300);
+    const image = absUrlForSeo(shop.image || detailInfo?.image);
+
+    document.title = title;
+
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.content = desc;
+
+    setLinkHref('canonical', pageUrl);
+    setMetaContent('property', 'og:title', title);
+    setMetaContent('property', 'og:description', desc);
+    setMetaContent('property', 'og:url', pageUrl);
+    setMetaContent('property', 'og:image', image);
+    setMetaContent('property', 'og:type', 'article');
+
+    setMetaContent('name', 'twitter:card', 'summary_large_image');
+    setMetaContent('name', 'twitter:title', title);
+    setMetaContent('name', 'twitter:description', desc);
+    setMetaContent('name', 'twitter:image', image);
+
+    const telRaw = shop.phone || detailInfo?.phone || '';
+    const telClean = telRaw.replace(/[^\d+]/g, '');
+
+    const streetLine = [detailInfo?.detailAddress, shop.detailAddress, shop.address]
+        .map((v) => (v && String(v).trim()) || '')
+        .find(Boolean);
+
+    const ld = {
+        '@context': 'https://schema.org',
+        '@type': 'HealthAndBeautyBusiness',
+        name: shop.name,
+        url: pageUrl,
+        image: image,
+        description: String(descRaw).slice(0, 5000),
+    };
+
+    if (telClean) ld.telephone = telRaw.trim();
+
+    if (streetLine || shop.region || shop.district) {
+        ld.address = {
+            '@type': 'PostalAddress',
+            streetAddress: streetLine || undefined,
+            addressLocality: shop.district || shop.region || undefined,
+            addressRegion: shop.region || undefined,
+            addressCountry: 'KR',
+        };
+    }
+
+    const rating = typeof shop.rating === 'number' ? shop.rating : null;
+    const reviewCount =
+        typeof shop.reviewCount === 'number'
+            ? shop.reviewCount
+            : Array.isArray(shop.reviews)
+            ? shop.reviews.length
+            : null;
+    if (rating != null && reviewCount != null && reviewCount > 0) {
+        ld.aggregateRating = {
+            '@type': 'AggregateRating',
+            ratingValue: String(rating),
+            reviewCount: String(reviewCount),
+        };
+    }
+
+    setJsonLdDetail(ld);
+}
+
+function applyErrorSeo(message) {
+    document.title = `${message} | 인천출장마사지`;
+    setMetaContent('name', 'robots', 'noindex,follow');
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.content = message;
+    setLinkHref('canonical', `${SITE_ORIGIN}/index.html`);
+    setJsonLdDetail({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: document.title,
+        description: message,
+    });
+}
+
 class DetailPage {
     constructor() {
         // 상세 데이터만 사용 (shops.json)
@@ -20,12 +153,14 @@ class DetailPage {
         };
         
         if (!shopId) {
+            applyErrorSeo('업체 정보를 찾을 수 없습니다.');
             this.showError('업체 정보를 찾을 수 없습니다.');
             return;
         }
 
         const shop = this.shops.find(s => s.id == shopId);
         if (!shop) {
+            applyErrorSeo('업체 정보를 찾을 수 없습니다.');
             this.showError('업체 정보를 찾을 수 없습니다.');
             return;
         }
@@ -80,14 +215,7 @@ class DetailPage {
     }
 
     renderDetail(shop, detailInfo) {
-        // 제목 업데이트
-        document.title = `${shop.name} - 인천출장마사지`;
-        
-        // 메타 설명 업데이트
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) {
-            metaDesc.content = shop.description || `${shop.name} 상세 정보`;
-        }
+        applyDetailSeo(shop, detailInfo);
 
         // 헤더
         const title = document.querySelector('.detail-title');

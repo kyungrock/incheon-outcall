@@ -1,5 +1,15 @@
 User-agent: *
 Allow: /
 
+# 주요 검색·수집 봇 (명시적으로 허용)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Yeti
+Allow: /
+
 Sitemap: https://kyungrock.github.io/incheon-outcall/sitemap.xml
 

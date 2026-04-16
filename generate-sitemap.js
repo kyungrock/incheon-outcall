@@ -4,6 +4,8 @@ const path = require('path');
 const BASE_URL = 'https://kyungrock.github.io/incheon-outcall';
 const OUTPUT_FILE = path.join(__dirname, 'sitemap.xml');
 const SHOPS_JSON_PATH = path.join(__dirname, 'shops.json');
+/** sitemap.org 표준 네임스페이스 (https가 아닌 http URI) */
+const URLSET_NS = 'http://www.sitemaps.org/schemas/sitemap/0.9';
 
 function loadShops() {
   const raw = fs.readFileSync(SHOPS_JSON_PATH, 'utf8');
@@ -41,6 +43,15 @@ function generateSitemap() {
     });
   }
 
+  // 게시판
+  if (files.includes('board.html')) {
+    urls.push({
+      loc: `${BASE_URL}/board.html`,
+      priority: '0.7',
+      changefreq: 'weekly',
+    });
+  }
+
   // 업체별 동적 상세 페이지 (detail.html?id=업체ID)
   shops.forEach((shop) => {
     if (!shop || !shop.id) return;
@@ -67,7 +78,7 @@ function generateSitemap() {
     .join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="${URLSET_NS}">
 ${xmlItems}
 </urlset>
 `;
